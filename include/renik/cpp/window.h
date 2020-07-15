@@ -46,10 +46,10 @@ namespace renik {
 				_parent = parent;
 				_childs = std::vector<IWindow*>();
 			}
-			WindowDesc* get_Desc() { return &_desc; }
-			WinHandle* get_Handle() {return &_handle;}
-			IWindow* get_Parent() { return _parent; }
-			std::vector<IWindow*> get_Childs() { return _childs; }
+			WindowDesc* get_desc() { return &_desc; }
+			WinHandle* get_handle() {return &_handle;}
+			IWindow* get_parent() { return _parent; }
+			std::vector<IWindow*> get_childs() { return _childs; }
 
 			virtual int Show() { return false; }
 			virtual int Close() { return false; }
@@ -68,7 +68,7 @@ namespace renik {
 		private:
 			static std::vector<IWindow*> m_listWin;
 		public:
-			static IWindow* get_Window(uint id);
+			static IWindow* get_window(uint id);
 			static IWindow* Create(WindowDesc* param, IWindow* parent = nullptr);
 			static int Release(IWindow* window);
 		};

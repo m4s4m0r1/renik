@@ -1,4 +1,3 @@
-#ifdef RENIK_ENABLE
 #include <renik\cpp\common.h>
 #include <renik\cpp\math.h>
 #pragma warning( push )
@@ -263,4 +262,3 @@ namespace renik {
 	}
 }
 #pragma warning( pop )
-#endif

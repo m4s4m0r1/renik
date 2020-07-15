@@ -1,4 +1,3 @@
-#ifdef RENIK_ENABLE
 #include <renik\cpp\window.h>
 
 namespace renik {
@@ -7,18 +6,21 @@ namespace renik {
 
 		//----WINDOW MANAGER----
 		std::vector<IWindow*> WindowMgr::m_listWin = std::vector<IWindow*>();
-		IWindow* WindowMgr::get_Window(uint window) {
+		IWindow* WindowMgr::get_window(uint window) {
 			for (auto win : m_listWin) {
 				if (win->get_id() == window) {
 					return win;
 				}
 			}
+			return nullptr;
 		}
 		IWindow* WindowMgr::Create(WindowDesc* desc, IWindow* parent) {
 			IWindow* newWindow = nullptr;
 #if RENIK_PLATFORM_WIN
 			newWindow = new IWindow_Win(desc, parent);
 #endif
+			if (newWindow == nullptr)
+				return newWindow;
 			m_listWin.push_back(newWindow);
 			return m_listWin[m_listWin.size() - 1];
 		}
@@ -36,5 +38,3 @@ namespace renik {
 		}
 	}
 }
-
-#endif

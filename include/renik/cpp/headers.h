@@ -51,17 +51,11 @@
 //include graphic
 #if RENIK_PLATFORM_ANDROID || RENIK_PLATFORM_WEBGL || RENIK_ENABLE_WINGLES || RENIK_PLATFORM_WIN
 	#ifdef RENIK_INCLUDE_GRAPHIC_GL
-		//#include <GLEW\glew.h>
-		/*#include <GLAD\gl.h>
-		#include <GLAD\wgl.h>*/
 		#define RENIK_GL 1
 		#pragma comment (lib, "OpenGL32.lib")
 	#endif
 	#ifdef RENIK_INCLUDE_GRAPHIC_GLES
 		#define GL_GLEXT_PROTOTYPES 1
-		/*#include <EGL\egl.h>
-		#include <GLES\gl.h>
-		#include <GLES2\gl2.h>*/
 		#include <GL\glew.h>
 		#pragma comment (lib, "libEGL.lib")
 		#pragma comment (lib, "libGLESv2.lib")
@@ -95,22 +89,8 @@
 //include std library
 #include <vector>
 #include <string>
-#include <chrono>
-#include <stdarg.h>
-#include <ctime>
-#include <fstream>
 #include <unordered_map>
 #include <map>
-
-//Include 3rdParty
-//File Management
-#include <tinydir.h>
-
-//Optimized Matrix And Math
-#if RENIK_ENABLE_SUPPORT_EIGEN
-#include <Eigen\Core> //Matrix And Math
-#include <Eigen\Geometry> //Math And Geometry
-#endif
 
 namespace renik {
 #define byte unsigned char

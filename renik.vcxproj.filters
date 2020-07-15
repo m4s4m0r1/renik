@@ -54,30 +54,48 @@
     <ClInclude Include="include\renik\cpp\window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\renik\renik_window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RENIK_NYAMPAH\RENIK_JADUL\3rdParty\include\GLEW\eglew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RENIK_NYAMPAH\RENIK_JADUL\3rdParty\include\GLEW\glew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RENIK_NYAMPAH\RENIK_JADUL\3rdParty\include\GLEW\glxew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\RENIK_NYAMPAH\RENIK_JADUL\3rdParty\include\GLEW\wglew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="test\main.cpp">
+    <ClCompile Include="src\common.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renik\common.cpp">
+    <ClCompile Include="src\entity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renik\entity.cpp">
+    <ClCompile Include="src\graphic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renik\graphic.cpp">
+    <ClCompile Include="src\graphic_ogl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renik\thread.cpp">
+    <ClCompile Include="src\thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renik\graphic_ogl.cpp">
+    <ClCompile Include="src\window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renik\window.cpp">
+    <ClCompile Include="src\window_win.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renik\window_win.cpp">
+    <ClCompile Include="3rdParty\src\glew\glew.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

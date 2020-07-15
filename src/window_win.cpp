@@ -1,4 +1,3 @@
-#ifdef RENIK_ENABLE
 #include <renik\cpp\window.h>
 
 #if RENIK_PLATFORM_WIN
@@ -11,7 +10,7 @@ namespace renik {
 
 			IWindow_Win::IWindow_Win(WindowDesc* desc, IWindow* parent) : IWindow::IWindow(desc, parent) {
 				if (parent != nullptr) {
-					parent->get_Childs().push_back(this);
+					parent->get_childs().push_back(this);
 				}
 				WNDCLASS wc = {};
 				wc.lpfnWndProc = __WindowProc;
@@ -29,7 +28,7 @@ namespace renik {
 
 				HWND parentHWND = nullptr;
 				if (parent != nullptr) {
-					parentHWND = (HWND)parent->get_Handle()->hwnd;
+					parentHWND = (HWND)parent->get_handle()->hwnd;
 				}
 
 				HWND handle = CreateWindow(wc.lpszClassName,
@@ -86,6 +85,4 @@ namespace renik {
 		}
 	}
 }
-#endif
-
 #endif

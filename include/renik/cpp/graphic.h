@@ -5,6 +5,9 @@
 
 #define RENIK_IGRAPHIC(className) \
 	class className : public IGraphic {\
+	protected:\
+		bool checkShaderProgram(Shader* shader) override;\
+		bool checkShaderCompilation(Shader* shader) override;\
 	public:\
 		className(Surface* surface);\
 		~className();\
@@ -26,9 +29,8 @@
 		int BindRenderBuffer(uint handler) override;\
 		int BindMesh(Mesh* mesh) override;\
 		int UnbindMesh(Mesh* mesh) override;\
-		uint BindTexture() override;\
+		uint BindTexture(Texture* texture) override;\
 		int UnbindTexture(uint handler) override;\
-		int CompileMaterial(Material* material, const char* vertexShaderSrc, const char* fragmentShaderSrc) override;\
 		int AttachMaterial(Material* material, Mesh* mesh) override;\
 		int DestroyMaterial(Material* material) override;\
 		Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) override;\
@@ -49,6 +51,9 @@
 
 namespace renik {
 	namespace Graphic {
+		class IGraphic;
+		typedef RENFUNC(gLogCallback, void, IGraphic*, std::string);
+
 		//----GRAPHIC PARAMETER---
 		enum class GraphicBackend {
 			UNKNOWN = -1,
@@ -199,13 +204,14 @@ namespace renik {
 			bool fullScreen;
 
 			GraphicSurfaceData() {
-				tgtGraphic = (GraphicBackend)-1;
-				pixFormat = (GraphicPixelFormat)-1;
-				depthFmt = (GraphicDepthFormat)-1;
-				presentInterval = (GraphicPresentInterval)-1;
-				dispOrient = (GraphicDisplayOrientation)-1;
+				tgtGraphic = (GraphicBackend)0;
+				pixFormat = (GraphicPixelFormat)0;
+				depthFmt = (GraphicDepthFormat)0;
+				presentInterval = (GraphicPresentInterval)0;
+				dispOrient = (GraphicDisplayOrientation)0;
 				multiSampleCount = 0;
 				backBuffSize = SizeI();
+				fullScreen = true;
 			}
 		};
 		struct GraphicShaderInputData {
@@ -245,11 +251,16 @@ namespace renik {
 		//----GRAPHIC ABSTRACTION---
 		class IGraphic {
 		protected:
-			Surface* m_surface;
 			bool m_initialized;
 			void* m_gctx;
+			Surface* m_surface;
 			std::vector<Shader> m_libShader;
+
+			virtual bool checkShaderProgram(Shader* shader) { return false; };
+			virtual bool checkShaderCompilation(Shader* shader) { return false; };
 		public:
+			gLogCallback logCallback;
+
 			IGraphic(Surface* surface) {}
 			virtual ~IGraphic() {}
 
@@ -286,10 +297,9 @@ namespace renik {
 			virtual int BindMesh(Mesh* mesh) { return false; }
 			virtual int UnbindMesh(Mesh* mesh) { return false; }
 			//Texture
-			virtual uint BindTexture() { return 0U; }
+			virtual uint BindTexture(Texture* texture) { return 0U; }
 			virtual int UnbindTexture(uint handler) { return false; }
 			//Material
-			virtual int CompileMaterial(Material* material, const char* vertexShaderSrc, const char* fragmentShaderSrc) { return false; }
 			virtual int AttachMaterial(Material* material, Mesh* mesh) { return false; }
 			virtual int DestroyMaterial(Material* material) { return false; }
 			//Shader
@@ -320,7 +330,7 @@ namespace renik {
 		namespace __internal__ {
 		#ifdef RENIK_INCLUDE_GRAPHIC_GL
 				//Generated Script for OpenGL Graphic
-				//RENIK_IGRAPHIC(IGraphic_OGL);
+				RENIK_IGRAPHIC(IGraphic_OGL);
 		#endif
 		#ifdef RENIK_INCLUDE_GRAPHIC_GLES
 				//Generated Script for OpenGL ES Graphic
@@ -348,14 +358,13 @@ namespace renik {
 		//----GRAPHIC MANAGER----
 		class GraphicMgr final {
 		public:
-			static std::vector<IGraphic*> gInterfaces;
 			static std::vector<Surface> surfaces;
 			static std::vector<Mesh> meshes;
 			static std::vector<Texture> textures;
 			static std::vector<Material> materials;
 
 			static Surface* CreateSurface(GraphicSurfaceData* surface);
-			static IGraphic* InitSurface(Surface* surface, void* winPtr);
+			static IGraphic* ConnectSurface(Surface* surface, void* winPtr);
 			static bool DestroySurface(Surface* surface);
 		};
 	}

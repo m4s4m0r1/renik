@@ -1,10 +1,9 @@
-#ifdef RENIK_ENABLE
 #include <renik\cpp\entity.h>
 namespace renik {
-	namespace Entity {
+	namespace EntitySystem {
 		//--BaseObject---
-		template<class T> std::vector<renikObject<T>> renikObject<T>::m_objPool = std::vector<renikObject<T>>();
-		template<class T> renikObject<T>::renikObject() {
+		template<class T> std::vector<Object<T>> Object<T>::m_objPool = std::vector<Object<T>>();
+		template<class T> Object<T>::Object() {
 			this->_active = true;
 			this->_name = "Renik Object";
 			this->_tags = std::vector<std::string>();
@@ -12,7 +11,7 @@ namespace renik {
 			this->_isPrepared = false;
 			m_objPool.push_back(*this);
 		}
-		template<class T> renikObject<T>::~renikObject() {
+		template<class T> Object<T>::~Object() {
 			size_t s = m_objPool.size();
 			for (size_t i = 0; i < s; i++) {
 				if (&m_objPool[i] == this) {
@@ -21,14 +20,14 @@ namespace renik {
 				}
 			}
 		}
-		template<class T> bool renikObject<T>::get_active() { return _active; }
-		template<class T> void renikObject<T>::set_active(bool value) { _active = value; }
-		template<class T> std::string renikObject<T>::get_name() { return _name; }
-		template<class T> void renikObject<T>::set_name(const std::string& value) { _name = value; }
-		template<class T> void renikObject<T>::add_tag(const std::string& tag) { _tags.push_back(tag); }
-		template<class T> const std::string* renikObject<T>::get_tags() { return _tags.data(); }
-		template<class T> size_t renikObject<T>::get_tagsCount() { return _tags.size(); }
-		template<class T> bool renikObject<T>::remove_tag(const std::string& tag) {
+		template<class T> bool Object<T>::get_active() { return _active; }
+		template<class T> void Object<T>::set_active(bool value) { _active = value; }
+		template<class T> std::string Object<T>::get_name() { return _name; }
+		template<class T> void Object<T>::set_name(const std::string& value) { _name = value; }
+		template<class T> void Object<T>::add_tag(const std::string& tag) { _tags.push_back(tag); }
+		template<class T> const std::string* Object<T>::get_tags() { return _tags.data(); }
+		template<class T> size_t Object<T>::get_tagsCount() { return _tags.size(); }
+		template<class T> bool Object<T>::remove_tag(const std::string& tag) {
 			auto len = _tags.size();
 			for (size_t i = 0; i < len; i++) {
 				if (_tags[i] == tag) {
@@ -38,22 +37,22 @@ namespace renik {
 			}
 			return false;
 		}
-		template<class T> void renikObject<T>::_setPrepared(bool state) { _isPrepared = state; }
-		template<class T> void renikObject<T>::_setApplied(bool state) { _isApplied = state; }
-		template<class T> void renikObject<T>::OnPrepare() { ePrepare(); _isPrepared = true; }
-		template<class T> void renikObject<T>::OnApply() { eApply(); _isApplied = true; }
+		template<class T> void Object<T>::_setPrepared(bool state) { _isPrepared = state; }
+		template<class T> void Object<T>::_setApplied(bool state) { _isApplied = state; }
+		template<class T> void Object<T>::OnPrepare() { event_onPrepare(); _isPrepared = true; }
+		template<class T> void Object<T>::OnApply() { event_onApply(); _isApplied = true; }
 
-		//--renikComponent--
-		void* renikComponent::get_entity() { return this->m_owner; }
+		//--Component--
+		void* Component::get_entity() { return this->m_owner; }
 
-		//--renikEntity--
-		renikEntity::renikEntity() : renikObject() {
-			this->m_comps = std::vector<renikComponent>();
+		//--Entity--
+		Entity::Entity() : Object() {
+			this->m_comps = std::vector<Component>();
 			this->m_scene = nullptr;
 			this->m_parent = nullptr;
-			this->m_childs = std::vector<renikEntity*>();
+			this->m_childs = std::vector<Entity*>();
 		}
-		renikComponent* renikEntity::add_component(const renikComponent& comp) {
+		Component* Entity::add_component(const Component& comp) {
 			if (comp._singleComponent) {
 				size_t len = m_comps.size();
 				for (size_t i = 0; i < len; i++)
@@ -66,7 +65,7 @@ namespace renik {
 			m_comps.push_back(comp);
 			return &m_comps[m_comps.size() - 1];
 		}
-		renikComponent* renikEntity::get_component(const std::string& typeName) {
+		Component* Entity::get_component(const std::string& typeName) {
 			if (typeName.length() <= 0)
 				return nullptr;
 			size_t len = m_comps.size();
@@ -76,8 +75,8 @@ namespace renik {
 			}
 			return nullptr;
 		}
-		std::vector<renikComponent*> renikEntity::get_components(const std::string& typeName) {
-			std::vector<renikComponent*> res;
+		std::vector<Component*> Entity::get_components(const std::string& typeName) {
+			std::vector<Component*> res;
 			size_t len = m_comps.size();
 			if (typeName.length() <= 0) {
 				for (size_t i = 0; i < len; i++)
@@ -92,7 +91,7 @@ namespace renik {
 			}
 			return res;
 		}
-		bool renikEntity::remove_component(renikComponent* comp) {
+		bool Entity::remove_component(Component* comp) {
 			size_t len = m_comps.size();
 			for (size_t i = 0; i < len; i++)
 			{
@@ -104,28 +103,28 @@ namespace renik {
 			}
 			return false;
 		}
-		void renikEntity::OnPrepare() {
+		void Entity::OnPrepare() {
 			auto len = this->m_comps.size();
 			for (size_t i = 0; i < len; i++) {
 				if (this->m_comps[i].get_active())
 					this->m_comps[i].OnPrepare();
 			}
-			renikObject<renikEntity>::OnPrepare();
+			Object<Entity>::OnPrepare();
 		}
-		void renikEntity::OnApply() {
+		void Entity::OnApply() {
 			auto len = this->m_comps.size();
 			for (size_t i = 0; i < len; i++)
 			{
 				if (this->m_comps[i].get_active())
 					this->m_comps[i].OnApply();
 			}
-			renikObject<renikEntity>::OnApply();
+			Object<Entity>::OnApply();
 		}
 
-		renikEntity* renikEntity::get_parent() {
+		Entity* Entity::get_parent() {
 			return m_parent;
 		}
-		void renikEntity::set_parent(renikEntity* entity) {
+		void Entity::set_parent(Entity* entity) {
 			if (m_parent != nullptr) {
 				size_t len = entity->m_childs.size();
 				for (size_t i = 0; i < len; i++)
@@ -141,16 +140,16 @@ namespace renik {
 				m_parent = entity;
 			}
 		}
-		renikEntity** renikEntity::get_childs() {
+		Entity** Entity::get_childs() {
 			return this->m_childs.data();
 		}
-		size_t renikEntity::get_childsCount() {
+		size_t Entity::get_childsCount() {
 			return this->m_childs.size();
 		}
 
-		//--renikScene--
-		renikScene::renikScene() { this->m_entities = std::vector<renikEntity*>(); }
-		bool renikScene::addObject(renikEntity* obj) {
+		//--Scene--
+		Scene::Scene() { this->m_entities = std::vector<Entity*>(); }
+		bool Scene::add_entity(Entity* obj) {
 			size_t len = m_entities.size();
 			for (size_t i = 0; i < len; i++) {
 				if (m_entities[i] == obj) {
@@ -161,7 +160,7 @@ namespace renik {
 			obj->m_scene = this;
 			return true;
 		}
-		bool renikScene::removeObject(renikEntity* obj) {
+		bool Scene::remove_entity(Entity* obj) {
 			size_t len = m_entities.size();
 			for (size_t i = 0; i < len; i++)
 			{
@@ -173,30 +172,29 @@ namespace renik {
 			}
 			return false;
 		}
-		renikEntity** renikScene::getObjects() {
+		Entity** Scene::get_entities() {
 			return m_entities.data();
 		}
-		size_t renikScene::getObjectsCount() {
+		size_t Scene::get_entitiesCount() {
 			return m_entities.size();
 		}
-		void renikScene::OnPrepare() {
+		void Scene::OnPrepare() {
 			auto len = this->m_entities.size();
 			for (size_t i = 0; i < len; i++)
 			{
 				if (this->m_entities[i]->get_active())
 					this->m_entities[i]->OnPrepare();
 			}
-			renikObject<renikScene>::OnPrepare();
+			Object<Scene>::OnPrepare();
 		}
-		void renikScene::OnApply() {
+		void Scene::OnApply() {
 			auto len = this->m_entities.size();
 			for (size_t i = 0; i < len; i++)
 			{
 				if (this->m_entities[i]->get_active())
 					this->m_entities[i]->OnApply();
 			}
-			renikObject<renikScene>::OnApply();
+			Object<Scene>::OnApply();
 		}
 	}
 }
-#endif //RENIK_ENABLE

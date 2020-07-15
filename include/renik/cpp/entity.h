@@ -2,12 +2,12 @@
 #ifndef RENIK_ENTITY_CPP_H
 #include <renik\cpp\common.h>
 namespace renik {
-	namespace Entity {
+	namespace EntitySystem {
 		typedef RENFUNC(entityFunc, void);
 		//--- BASE ENTITY OBJECT ---
-		template<class T> class renikObject : public BaseObject<uint, T> {
+		template<class T> class Object : public BaseObject<uint, T> {
 		private:
-			static std::vector<renikObject<T>> m_objPool;
+			static std::vector<Object<T>> m_objPool;
 		protected:
 			bool _active;
 			std::string _name;
@@ -17,11 +17,11 @@ namespace renik {
 			void _setPrepared(bool state);
 			void _setApplied(bool state);
 		public:
-			renikObject();
-			~renikObject();
+			Object();
+			~Object();
 
-			entityFunc ePrepare;
-			entityFunc eApply;
+			entityFunc event_onPrepare;
+			entityFunc event_onApply;
 
 			virtual bool get_active();
 			virtual void set_active(bool value);
@@ -38,14 +38,14 @@ namespace renik {
 			virtual void OnApply();
 		};
 
-		class renikComponent;
-		class renikEntity;
-		class renikScene;
+		class Component;
+		class Entity;
+		class Scene;
 
-		class renikComponent : public renikObject<renikComponent> {
+		class Component : public Object<Component> {
 		private:
 			void* m_owner;
-			friend class renikEntity;
+			friend class Entity;
 		protected:
 			bool _singleComponent;
 			std::string _typeName;
@@ -54,39 +54,39 @@ namespace renik {
 			void* get_entity();
 		};
 
-		class renikEntity : public renikObject<renikEntity> {
+		class Entity : public Object<Entity> {
 		private:
-			std::vector<renikComponent> m_comps;
-			renikEntity* m_parent;
-			std::vector<renikEntity*> m_childs;
-			renikScene* m_scene;
+			std::vector<Component> m_comps;
+			Entity* m_parent;
+			std::vector<Entity*> m_childs;
+			Scene* m_scene;
 
-			friend class renikScene;
+			friend class Scene;
 		public:
-			renikEntity();
-			renikComponent* add_component(const renikComponent& comp);
-			renikComponent* get_component(const std::string& typeName);
-			std::vector<renikComponent*> get_components(const std::string& typeName);
-			bool remove_component(renikComponent* comp);
+			Entity();
+			Component* add_component(const Component& comp);
+			Component* get_component(const std::string& typeName);
+			std::vector<Component*> get_components(const std::string& typeName);
+			bool remove_component(Component* comp);
 
-			renikEntity* get_parent();
-			void set_parent(renikEntity* entity);
-			renikEntity** get_childs();
+			Entity* get_parent();
+			void set_parent(Entity* entity);
+			Entity** get_childs();
 			size_t get_childsCount();
 
 			void OnPrepare() override;
 			void OnApply() override;
 		};
 
-		class renikScene : public renikObject<renikScene> {
+		class Scene : public Object<Scene> {
 		private:
-			std::vector<renikEntity*> m_entities;
+			std::vector<Entity*> m_entities;
 		public:
-			renikScene();
-			bool addObject(renikEntity* obj);
-			bool removeObject(renikEntity* obj);
-			renikEntity** getObjects();
-			size_t getObjectsCount();
+			Scene();
+			bool add_entity(Entity* obj);
+			bool remove_entity(Entity* obj);
+			Entity** get_entities();
+			size_t get_entitiesCount();
 
 			void OnPrepare() override;
 			void OnApply() override;
