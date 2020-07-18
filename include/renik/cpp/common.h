@@ -469,6 +469,22 @@ namespace renik {
 	public:
 		T* ptr = nullptr;
 		size_t size = 0U;
+		uint stride = 1U;
+		uint sizePerElement = sizeof(T);
+
+		Array(T* ptr = nullptr, size_t size = 0U, uint stride = 1U, uint sizePerElement = sizeof(T)) {
+			this->ptr = ptr;
+			this->size = size;
+			this->stride = stride;
+			this->sizePerElement = sizePerElement;
+		}
+
+		size_t size_Total() {
+			return size * stride;
+		}
+		size_t size_TotalData() {
+			return sizePerElement * size_Total();
+		}
 	};
 }
 #endif // !RENIK_COMMON_CPP_H

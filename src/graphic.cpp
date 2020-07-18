@@ -57,6 +57,57 @@ namespace renik {
 		bool GraphicMgr::DestroySurface(Surface* surface) {
 			if (surface == nullptr)
 				return false;
+			return true;
+		}
+
+		Material* GraphicMgr::CreateMaterial() {
+			Material mat = {};
+			mat.shader = nullptr;
+			mat.handler = std::unordered_map<std::string, GraphicShaderInputData>();
+
+			materials.push_back(mat);
+			return &materials[GraphicMgr::materials.size() - 1];
+		}
+		bool GraphicMgr::DestroyMaterial(Material* mat) {
+			if (mat != nullptr)
+			{
+				mat->shader = nullptr;
+				size_t len = materials.size();
+				for (size_t i = 0; i < len; i++)
+				{
+					if (&materials[i] == mat) {
+						materials.erase(materials.begin() + i);
+						materials.shrink_to_fit();
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+
+		Mesh* GraphicMgr::CreateMesh(Array<Vec3F>& verticies, Array<uint>& index) {
+			Mesh m = {};
+			m.vertex = std::unordered_map <std::string , Array<float>> ();
+			m.material = nullptr;
+			m.vertex["vert"] = Array<float>((float*)verticies.ptr, verticies.size, 3U, sizeof(Vec3F));
+			m.index = index;
+
+			meshes.push_back(m);
+			return &meshes[meshes.size() - 1];
+		}
+		bool GraphicMgr::DestroyMesh(Mesh* mesh) {
+			if (mesh != nullptr) {
+				auto len = meshes.size();
+				for (size_t i = 0; i < len; i++) {
+					if (&meshes[i] == mesh) {
+						meshes.erase(meshes.begin() + i);
+						mesh->material = nullptr;
+						mesh->vertex.clear();
+						return true;
+					}
+				}
+			}
+			return false;
 		}
 	}
 }

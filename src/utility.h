@@ -10,14 +10,13 @@
 
 namespace renik {
 	namespace Util {
-		inline const char* Concat(const char* fmt, ...) {
-			char buff[4096];
-			va_list arg;
-			va_start(arg, fmt);
-			vsnprintf_s(buff, sizeof(buff), fmt, arg);
-			va_end(arg);
-
-			return buff;
+		template<typename ... Args>
+		inline std::string StringFormat(const std::string& format, Args ... args)
+		{
+			size_t size = snprintf(nullptr, 0, format.c_str(), args ...) + 1;
+			std::unique_ptr<char[]> buf(new char[size]);
+			snprintf(buf.get(), size, format.c_str(), args ...);
+			return std::string(buf.get(), buf.get() + size - 1);
 		}
 		inline const wchar_t* LastSysErr() {
 #if defined(_WIN32)

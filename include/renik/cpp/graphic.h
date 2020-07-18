@@ -6,8 +6,8 @@
 #define RENIK_IGRAPHIC(className) \
 	class className : public IGraphic {\
 	protected:\
-		bool checkShaderProgram(Shader* shader) override;\
-		bool checkShaderCompilation(Shader* shader) override;\
+		bool checkShaderProgram(void* shaderHandle, uint kind) override;\
+		bool checkShaderCompilation(void* shaderHandle, uint kind) override;\
 	public:\
 		className(Surface* surface);\
 		~className();\
@@ -27,18 +27,18 @@
 		uint CreateRenderBuffer() override;\
 		int DeleteRenderBuffer(uint handler) override;\
 		int BindRenderBuffer(uint handler) override;\
-		int BindMesh(Mesh* mesh) override;\
-		int UnbindMesh(Mesh* mesh) override;\
+		int BindMesh(Mesh* mesh,bool rebind = false) override;\
+		int UnbindMesh(Mesh* mesh,bool release = false) override;\
 		uint BindTexture(Texture* texture) override;\
 		int UnbindTexture(uint handler) override;\
 		int AttachMaterial(Material* material, Mesh* mesh) override;\
 		int DestroyMaterial(Material* material) override;\
-		Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) override;\
+		Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) override;\
 		int AttachShader(Shader* shader, Material* material)override;\
 		int DestroyShader(Shader* shader)override;\
 		int ApplyTransform(const Vec3F& pos, const Vec3F& rot, const Vec3F& scl) override;\
 		int ApplyProjection(const SizeF& size, float nearClip, float farClip) override;\
-		int DrawMesh(Mesh* mesh, int drawMode) override;\
+		int DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) override;\
 		int DrawViewPort() override;\
 		int DrawPoint(int drawMode) override;\
 		int DrawLine(int drawMode) override;\
@@ -51,6 +51,12 @@
 
 namespace renik {
 	namespace Graphic {
+		namespace __internal__ {
+			struct _MeshHandler {
+				void* vbo;
+				void* ibo;
+			};
+		}
 		class IGraphic;
 		typedef RENFUNC(gLogCallback, void, IGraphic*, std::string);
 
@@ -181,7 +187,7 @@ namespace renik {
 			RENDERBUFFER,
 			CUSTOM
 		};
-		enum class GraphicShaderInputType {
+		enum class GraphicShaderInputDataType {
 			UNKNOWN = 0,
 			FLOAT = sizeof(float),
 			VEC2 = sizeof(Vec2F),
@@ -190,6 +196,21 @@ namespace renik {
 			MAT2X2 = VEC2 * 2 + 1,
 			MAT3X3 = VEC3 * 3,
 			MAT4X4 = VEC4 * 4
+		};
+		enum class GraphicShaderInputType {
+			UNKNOWN = 0,
+			ATTRIBUTE,
+			UNIFORM
+		};
+		enum class GraphicDrawMode {
+			UNKNOWN = 0,
+			POINTS,
+			LINE_STRIP, 
+			LINE_LOOP, 
+			LINES, 
+			TRIANGLE_STRIP, 
+			TRIANGLE_FAN, 
+			TRIANGLES, 
 		};
 
 		struct GraphicSurfaceData {
@@ -214,9 +235,14 @@ namespace renik {
 				fullScreen = true;
 			}
 		};
-		struct GraphicShaderInputData {
+		struct GraphicShaderInputInfo {
 			GraphicShaderInputType type = GraphicShaderInputType::UNKNOWN;
-			const char* name = nullptr;
+			GraphicShaderInputDataType dataType = GraphicShaderInputDataType::UNKNOWN;
+		};
+		struct GraphicShaderInputData {
+			void* handle = nullptr;
+			void* dataHandle = nullptr;
+			GraphicShaderInputInfo* info;
 		};
 
 		//----GRAPHIC RESOURCE---
@@ -232,32 +258,53 @@ namespace renik {
 		};
 		struct Shader : public BaseObject<ulong, Shader> {
 			const char* name = nullptr;
-			void* handleGL = nullptr;
-			void* handleDX = nullptr;
-			std::unordered_map<const char*, GraphicShaderInputType> input;
+			void* handle = nullptr;
+			std::unordered_map<std::string, GraphicShaderInputInfo> input;
 		};
 		struct Material : public BaseObject<ulong, Shader> {
-			Shader* material = nullptr;
+			Shader* shader = nullptr;
+			std::unordered_map<std::string, GraphicShaderInputData> handler;
 		};
-		struct Mesh : public BaseObject<ulong, Shader> {
-			Material* material = nullptr;
-			std::vector<Array<Vec3F>> data;
+		class Mesh : public BaseObject<ulong, Shader> {
+		private:
+			std::vector<float> m_vertex;
+			std::vector<uint> m_index;
+			std::unordered_map<std::string, Array<float>> m_vPtr;
+		public:
+			Material* material;
 			bool isStatic = false;
+
+			Mesh() : BaseObject() {
+				material = nullptr;
+				isStatic = false;
+			}
+			~Mesh() {
+				m_vertex.clear();
+				m_index.clear();
+				m_vPtr.clear();
+			}
+
+			size_t get_vertexSize() {
+				return m_vertex.size();
+			}
 		};
 		struct Texture : public BaseObject<ulong, Shader> {
 			SizeI size = SizeI();
+			GraphicPixelFormat pixFmt;
 		};
 
 		//----GRAPHIC ABSTRACTION---
 		class IGraphic {
 		protected:
-			bool m_initialized;
-			void* m_gctx;
-			Surface* m_surface;
-			std::vector<Shader> m_libShader;
+			bool _initialized;
+			void* _gctx;
+			Surface* _surface;
+			std::vector<Shader> _libShader;
+			std::unordered_map<const char*, void*> _handler;
+			std::unordered_map<Mesh*, __internal__::_MeshHandler> _meshHandler;
 
-			virtual bool checkShaderProgram(Shader* shader) { return false; };
-			virtual bool checkShaderCompilation(Shader* shader) { return false; };
+			virtual bool checkShaderProgram(void* shaderHandle, uint kind) { return false; };
+			virtual bool checkShaderCompilation(void* shaderHandle, uint kind) { return false; };
 		public:
 			gLogCallback logCallback;
 
@@ -266,15 +313,15 @@ namespace renik {
 
 			//Property-Like Function
 			virtual int get_GraphicType() { return -1; }
-			virtual bool get_IsInitialized() { return m_initialized; }
-			virtual Surface* get_Surface() { return m_surface; }
-			virtual std::vector<Shader> get_Shaders() { return m_libShader; }
+			virtual bool get_IsInitialized() { return _initialized; }
+			virtual Surface* get_Surface() { return _surface; }
+			virtual std::vector<Shader> get_Shaders() { return _libShader; }
 			virtual Shader* get_Shader(uint shaderID) {
-				auto len = m_libShader.size();
+				auto len = _libShader.size();
 				for (size_t i = 0; i < len; i++)
 				{
-					if (m_libShader[i].get_id() == shaderID)
-						return &m_libShader[i];
+					if (_libShader[i].get_id() == shaderID)
+						return &_libShader[i];
 				}
 				return nullptr;
 			}
@@ -294,8 +341,8 @@ namespace renik {
 			virtual int DeleteRenderBuffer(uint handler) { return false; }
 			virtual int BindRenderBuffer(uint handler) { return false; }
 			//Mesh Creation
-			virtual int BindMesh(Mesh* mesh) { return false; }
-			virtual int UnbindMesh(Mesh* mesh) { return false; }
+			virtual int BindMesh(Mesh* mesh, bool rebind = false) { return false; }
+			virtual int UnbindMesh(Mesh* mesh, bool release = false) { return false; }
 			//Texture
 			virtual uint BindTexture(Texture* texture) { return 0U; }
 			virtual int UnbindTexture(uint handler) { return false; }
@@ -303,14 +350,14 @@ namespace renik {
 			virtual int AttachMaterial(Material* material, Mesh* mesh) { return false; }
 			virtual int DestroyMaterial(Material* material) { return false; }
 			//Shader
-			virtual Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) { return false; }
+			virtual Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) { return false; }
 			virtual int AttachShader(Shader* shader, Material* material) { return false; }
 			virtual int DestroyShader(Shader* shader) { return false; }
 			//Transform
 			virtual int ApplyTransform(const Vec3F& pos, const Vec3F& rot, const Vec3F& scl) { return false; }
 			virtual int ApplyProjection(const SizeF& size, float nearClip, float farClip) { return false; }
 			//Render
-			virtual int DrawMesh(Mesh* mesh, int drawMode) { return false; }
+			virtual int DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) { return false; }
 			virtual int DrawViewPort() { return false; }
 			virtual int DrawPoint(int drawMode) { return false; }
 			virtual int DrawLine(int drawMode) { return false; }
@@ -366,6 +413,12 @@ namespace renik {
 			static Surface* CreateSurface(GraphicSurfaceData* surface);
 			static IGraphic* ConnectSurface(Surface* surface, void* winPtr);
 			static bool DestroySurface(Surface* surface);
+
+			static Material* CreateMaterial();
+			static bool DestroyMaterial(Material* mat);
+
+			static Mesh* CreateMesh(Array<Vec3F>& verticies, Array<uint>& index);
+			static bool DestroyMesh(Mesh* mesh);
 		};
 	}
 }
