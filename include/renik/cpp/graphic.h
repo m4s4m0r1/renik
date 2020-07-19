@@ -58,7 +58,7 @@ namespace renik {
 			};
 		}
 		class IGraphic;
-		typedef RENFUNC(gLogCallback, void, IGraphic*, std::string);
+		typedef RENFUNC(gLogCallback, void, int, int, std::string);
 
 		//----GRAPHIC PARAMETER---
 		enum class GraphicBackend {
@@ -209,7 +209,7 @@ namespace renik {
 			LINE_LOOP, 
 			LINES, 
 			TRIANGLE_STRIP, 
-			TRIANGLE_FAN, 
+			TRIANGLE_FAN,
 			TRIANGLES, 
 		};
 
@@ -239,14 +239,10 @@ namespace renik {
 			GraphicShaderInputType type = GraphicShaderInputType::UNKNOWN;
 			GraphicShaderInputDataType dataType = GraphicShaderInputDataType::UNKNOWN;
 		};
-		struct GraphicShaderInputData {
-			void* handle = nullptr;
-			void* dataHandle = nullptr;
-			GraphicShaderInputInfo* info;
-		};
 
 		//----GRAPHIC RESOURCE---
-		struct Surface : public BaseObject<ulong, Surface> {
+		class Surface : public BaseObject<ulong, Surface> {
+		public:
 			GraphicSurfaceData param;
 			void* winData;
 			void* gInterface;
@@ -256,39 +252,61 @@ namespace renik {
 				rect = RectI(0, 0, 0, 0);
 			}
 		};
-		struct Shader : public BaseObject<ulong, Shader> {
+
+		class Shader : public BaseObject<ulong, Shader> {
+		public:
 			const char* name = nullptr;
 			void* handle = nullptr;
 			std::unordered_map<std::string, GraphicShaderInputInfo> input;
 		};
-		struct Material : public BaseObject<ulong, Shader> {
+
+		class Material : public BaseObject<ulong, Material> {
+		public:
 			Shader* shader = nullptr;
-			std::unordered_map<std::string, GraphicShaderInputData> handler;
+			std::unordered_map<std::string, void*> pointerHandler;
 		};
-		class Mesh : public BaseObject<ulong, Shader> {
+
+		class Mesh : public BaseObject<ulong, Mesh> {
 		private:
 			std::vector<float> m_vertex;
 			std::vector<uint> m_index;
-			std::unordered_map<std::string, Array<float>> m_vPtr;
+			std::unordered_map<std::string, Array<float>> m_vertexPtr;
+			friend class IGraphic;
 		public:
 			Material* material;
 			bool isStatic = false;
 
 			Mesh() : BaseObject() {
+				m_vertex = std::vector<float>();
+				m_index = std::vector<uint>();
+				m_vertexPtr = std::unordered_map<std::string, Array<float>>();
+
 				material = nullptr;
 				isStatic = false;
 			}
 			~Mesh() {
 				m_vertex.clear();
 				m_index.clear();
-				m_vPtr.clear();
+				m_vertexPtr.clear();
 			}
 
-			size_t get_vertexSize() {
-				return m_vertex.size();
-			}
+			int get_index(const uint* buffer, size_t bufferSize);
+			int set_index(Array<uint>* indexArray);
+			Array<uint> get_indexPtr();
+
+			int get_vertex(const char* name, const float* buffer, size_t bufferSize);
+			int add_vertex(const char* name, Array<float>* vertexData);
+			int remove_vertex(const char* name);
+
+			size_t get_vertexLength();
+			size_t get_indexLength();
+			Array<float> get_vertexPtr(const char* name);
+			std::vector<std::string> get_vertexNames();
+			std::vector<Array<float>> get_vertexPtrs();
 		};
-		struct Texture : public BaseObject<ulong, Shader> {
+
+		class Texture: public BaseObject<ulong, Shader>{
+		public:
 			SizeI size = SizeI();
 			GraphicPixelFormat pixFmt;
 		};
@@ -325,6 +343,7 @@ namespace renik {
 				}
 				return nullptr;
 			}
+
 			//Base Function
 			virtual int Init() { return false; }
 			virtual int Release() { return false; }
@@ -406,7 +425,6 @@ namespace renik {
 		class GraphicMgr final {
 		public:
 			static std::vector<Surface> surfaces;
-			static std::vector<Mesh> meshes;
 			static std::vector<Texture> textures;
 			static std::vector<Material> materials;
 
@@ -416,9 +434,6 @@ namespace renik {
 
 			static Material* CreateMaterial();
 			static bool DestroyMaterial(Material* mat);
-
-			static Mesh* CreateMesh(Array<Vec3F>& verticies, Array<uint>& index);
-			static bool DestroyMesh(Mesh* mesh);
 		};
 	}
 }

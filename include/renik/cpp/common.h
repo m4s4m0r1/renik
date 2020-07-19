@@ -468,22 +468,26 @@ namespace renik {
 	template<typename T> struct Array {
 	public:
 		T* ptr = nullptr;
-		size_t size = 0U;
+		size_t length = 0U;
 		uint stride = 1U;
 		uint sizePerElement = sizeof(T);
 
-		Array(T* ptr = nullptr, size_t size = 0U, uint stride = 1U, uint sizePerElement = sizeof(T)) {
+		Array(T* ptr = nullptr, size_t length = 0U, uint stride = 1U, uint sizePerElement = sizeof(T)) {
 			this->ptr = ptr;
-			this->size = size;
+			this->length = length;
 			this->stride = stride;
 			this->sizePerElement = sizePerElement;
 		}
 
-		size_t size_Total() {
-			return size * stride;
+		size_t size() {
+			return length * sizePerElement;
 		}
-		size_t size_TotalData() {
-			return sizePerElement * size_Total();
+		size_t totalLength() {
+			return length * stride;
+		}
+
+		size_t totalLengthInByte() {
+			return sizePerElement * totalLength();
 		}
 	};
 }

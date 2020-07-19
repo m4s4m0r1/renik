@@ -19,7 +19,7 @@ namespace renik {
 					std::vector<char> ErrorMessage(InfoLogLength + 1);
 					glGetShaderInfoLog((uint)handler, InfoLogLength, NULL, &ErrorMessage[0]);
 					if(logCallback != nullptr)
-						logCallback(this, Util::StringFormat("Failed to Compile %s Shader: \n%s", kind == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT", &ErrorMessage[0]));
+						logCallback(-1, this->get_GraphicType(), Util::StringFormat("Failed to Compile %s Shader: \n%s", kind == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT", &ErrorMessage[0]));
 					return false;
 				}
 				return true;
@@ -32,7 +32,7 @@ namespace renik {
 					GLchar message[1024];
 					glGetProgramInfoLog((uint)handler, 1024, &log_length, message);
 					if (logCallback != nullptr)
-						logCallback(this, Util::StringFormat("Failed to %s Shader: \n%s", kind == GL_LINK_STATUS ? "LINK" : "VALIDATE", message));
+						logCallback(-1,this->get_GraphicType(), Util::StringFormat("Failed to %s Shader: \n%s", kind == GL_LINK_STATUS ? "LINK" : "VALIDATE", message));
 					glDeleteProgram((uint)handler);
 					return false;
 				}
@@ -62,6 +62,14 @@ namespace renik {
 					case GraphicDrawMode::TRIANGLES:		return GL_TRIANGLES;
 				}
 				return GL_FALSE;
+			}
+			inline void __getErr(gLogCallback callBack, const char* funName, uint line) {
+				uint code = glGetError();
+				if (code != GL_NO_ERROR) {
+					if (callBack != nullptr) {
+						callBack(code, (int)GraphicBackend::OPENGL, Util::StringFormat("ERROR:%i in %s line %i", code, funName,line-1));
+					}
+				}
 			}
 
 			IGraphic_OGL::IGraphic_OGL(Surface* surface) : IGraphic::IGraphic(surface) { 
@@ -109,21 +117,21 @@ namespace renik {
 				int pixFmt = ChoosePixelFormat((HDC)winSurface->hwndDC, &pDesc);
 				if (!pixFmt) {
 					if (logCallback)
-						logCallback((IGraphic*)this, Util::StringFormat("Failed to Choose Pixel Format: %S", Util::LastSysErr()));
+						logCallback(-1, this->get_GraphicType(), Util::StringFormat("Failed to Choose Pixel Format: %S", Util::LastSysErr()));
 					return false;
 				}
 				SetPixelFormat((HDC)winSurface->hwndDC, pixFmt, &pDesc);
 				this->_gctx = wglCreateContext((HDC)winSurface->hwndDC);
 				if (!this->_gctx) {
 					if (logCallback)
-						logCallback((IGraphic*)this, Util::StringFormat("Failed to create Context: %S", Util::LastSysErr()));
+						logCallback(-1, this->get_GraphicType(), Util::StringFormat("Failed to create Context: %S", Util::LastSysErr()));
 					return false;
 				}
 				wglMakeCurrent((HDC)winSurface->hwndDC, (HGLRC)this->_gctx);
 
 				if (glewInit() != GLEW_OK) {
 					if (logCallback)
-						logCallback((IGraphic*)this, Util::StringFormat("Failed to initializing GLEW: %S", Util::LastSysErr()));
+						logCallback(-1, this->get_GraphicType(), Util::StringFormat("Failed to initializing GLEW: %S", Util::LastSysErr()));
 					return false;
 				}
 
@@ -134,6 +142,9 @@ namespace renik {
 				glGenVertexArrays(1, &vao);
 				_handler["fb"] = (void*)(uint)fb;
 				_handler["vao"] = (void*)vao;
+
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 				_surface->gInterface = this;
 				_initialized = true;
@@ -184,13 +195,17 @@ namespace renik {
 				if (mesh == nullptr)
 					return false;
 				glBindBuffer(GL_ARRAY_BUFFER, NULL);
+				__getErr(this->logCallback, "glBindBuffer", __LINE__);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
+				__getErr(this->logCallback, "glBindBuffer", __LINE__);
 				//Check mesh
 				if (!rebind) {
 					for (auto m : _meshHandler) {
 						if (m.first == mesh) {
 							glBindBuffer(GL_ARRAY_BUFFER, (uint)m.second.vbo);
+							__getErr(this->logCallback, "glBindBuffer", __LINE__);
 							glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, (uint)m.second.ibo);
+							__getErr(this->logCallback, "glBindBuffer", __LINE__);
 							return true;
 						}
 					}
@@ -198,16 +213,22 @@ namespace renik {
 				uint hPtr[2];
 				glGenBuffers(2, hPtr);
 				glBindBuffer(GL_ARRAY_BUFFER, hPtr[0]);
-				glBufferData(GL_ARRAY_BUFFER, mesh->get_VertexTotalSize(), NULL, mesh->isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+				size_t vLen = mesh->get_vertexLength() * sizeof(float);
+				glBufferData(GL_ARRAY_BUFFER, vLen, NULL, mesh->isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+				__getErr(this->logCallback, "glBufferData", __LINE__);
 				size_t offset = 0U;
-				for (auto v : mesh->vertex) {
-					auto size = v.second.size_Total();
-					glBufferSubData(GL_ARRAY_BUFFER, offset, size, v.second.ptr);
+				auto ptrs = mesh->get_vertexPtrs();
+				for (auto v : ptrs) {
+					auto size = v.size();
+					glBufferSubData(GL_ARRAY_BUFFER, offset, size, v.ptr);
+					__getErr(this->logCallback, "glBufferSubData", __LINE__);
 					offset += size;
 				}
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, hPtr[1]);
-				glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->index.size_Total(),mesh->index.ptr, mesh->isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
-				
+				size_t iLen = mesh->get_indexLength() * sizeof(float);
+				auto iPtr = mesh->get_indexPtr();
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER, iLen, iPtr.ptr, mesh->isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+				__getErr(this->logCallback, "glBufferSubData", __LINE__);
 				_MeshHandler handler = { (void*)hPtr[0], (void*)hPtr[1] };
 				_meshHandler[mesh] = handler;
 				return true;
@@ -316,15 +337,12 @@ namespace renik {
 				if (shader == nullptr || material == nullptr)
 					return false;
 				for (auto sP : shader->input) {
-					auto data = GraphicShaderInputData();
-					data.info = &sP.second;
 					uint loc = 0U;
 					if (sP.second.type == GraphicShaderInputType::ATTRIBUTE)
 						loc = (uint)glGetAttribLocation((uint)shader->handle, sP.first.c_str());
 					else
 						loc = (uint)glGetUniformLocation((uint)shader->handle, sP.first.c_str());
-					data.handle = (void*)loc;
-					material->handler[sP.first] = data;
+					material->pointerHandler[sP.first] = (void*)loc;
 				}
 				material->shader = shader;
 				return true;
@@ -344,17 +362,21 @@ namespace renik {
 			
 			int IGraphic_OGL::DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) {
 				glUseProgram((uint)mesh->material->shader->handle);
+				__getErr(this->logCallback, "glUseProgram", __LINE__);
 				BindMesh(mesh);
 				size_t offset = 0U;
-				for (auto v : mesh->material->handler) {
-					auto mData = mesh->vertex.at(v.first);
-					glEnableVertexAttribArray((uint)v.second.handle);
-					glVertexAttribPointer((uint)v.second.handle, mData.stride, GL_FLOAT, GL_FALSE, 0, (void*)offset);
-					offset += mData.size;
+				for (auto v : mesh->material->pointerHandler) {
+					auto meshPtr = mesh->get_vertexPtr(v.first.c_str());
+					glEnableVertexAttribArray((uint)v.second);
+					__getErr(this->logCallback, "glEnableVertexAttribArray", __LINE__);
+					glVertexAttribPointer((uint)v.second, meshPtr.stride, GL_FLOAT, GL_FALSE, 0, (void*)offset);
+					__getErr(this->logCallback, "glVertexAttribPointer", __LINE__);
+					offset += meshPtr.size();
 				}
-				glDrawElements(__getDrawMode(drawMode), mesh->index.size, GL_UNSIGNED_INT, (void*)NULL);
-				for (auto m : mesh->material->handler) {
-					glDisableVertexAttribArray((uint)m.second.handle);
+				glDrawElements(__getDrawMode(drawMode), mesh->get_indexLength(), GL_UNSIGNED_INT, (void*)NULL);
+				for (auto m : mesh->material->pointerHandler) {
+					glDisableVertexAttribArray((uint)m.second);
+					__getErr(this->logCallback, "glDisableVertexAttribArray", __LINE__);
 				}
 				glBindBuffer(GL_ARRAY_BUFFER, NULL);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
