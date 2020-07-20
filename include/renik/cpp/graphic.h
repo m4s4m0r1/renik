@@ -31,10 +31,8 @@
 		int UnbindMesh(Mesh* mesh,bool release = false) override;\
 		uint BindTexture(Texture* texture) override;\
 		int UnbindTexture(uint handler) override;\
-		int AttachMaterial(Material* material, Mesh* mesh) override;\
-		int DestroyMaterial(Material* material) override;\
 		Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) override;\
-		int AttachShader(Shader* shader, Material* material)override;\
+		int AttachShaderToMaterial(Shader* shader, Material* material)override;\
 		int DestroyShader(Shader* shader)override;\
 		int ApplyTransform(const Vec3F& pos, const Vec3F& rot, const Vec3F& scl) override;\
 		int ApplyProjection(const SizeF& size, float nearClip, float farClip) override;\
@@ -262,8 +260,17 @@ namespace renik {
 
 		class Material : public BaseObject<ulong, Material> {
 		public:
-			Shader* shader = nullptr;
-			std::unordered_map<std::string, void*> pointerHandler;
+			Shader* shader;
+			std::unordered_map<std::string, void*> shaderInputHandler;
+			
+			Material() {
+				shader = nullptr;
+				shaderInputHandler = std::unordered_map <std::string, void*>();
+			}
+			~Material() {
+				shader = nullptr;
+				shaderInputHandler.clear();
+			}
 		};
 
 		class Mesh : public BaseObject<ulong, Mesh> {
@@ -365,12 +372,9 @@ namespace renik {
 			//Texture
 			virtual uint BindTexture(Texture* texture) { return 0U; }
 			virtual int UnbindTexture(uint handler) { return false; }
-			//Material
-			virtual int AttachMaterial(Material* material, Mesh* mesh) { return false; }
-			virtual int DestroyMaterial(Material* material) { return false; }
 			//Shader
 			virtual Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) { return false; }
-			virtual int AttachShader(Shader* shader, Material* material) { return false; }
+			virtual int AttachShaderToMaterial(Shader* shader, Material* material) { return false; }
 			virtual int DestroyShader(Shader* shader) { return false; }
 			//Transform
 			virtual int ApplyTransform(const Vec3F& pos, const Vec3F& rot, const Vec3F& scl) { return false; }
@@ -426,14 +430,10 @@ namespace renik {
 		public:
 			static std::vector<Surface> surfaces;
 			static std::vector<Texture> textures;
-			static std::vector<Material> materials;
 
 			static Surface* CreateSurface(GraphicSurfaceData* surface);
 			static IGraphic* ConnectSurface(Surface* surface, void* winPtr);
 			static bool DestroySurface(Surface* surface);
-
-			static Material* CreateMaterial();
-			static bool DestroyMaterial(Material* mat);
 		};
 	}
 }

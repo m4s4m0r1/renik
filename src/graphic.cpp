@@ -31,7 +31,6 @@ namespace renik {
 
 		std::vector<Surface> GraphicMgr::surfaces = std::vector<Surface>();
 		std::vector<Texture> GraphicMgr::textures = std::vector<Texture>();
-		std::vector<Material> GraphicMgr::materials = std::vector<Material>();
 
 		Surface* GraphicMgr::CreateSurface(GraphicSurfaceData* surface) {
 			if (surface == nullptr)
@@ -57,31 +56,6 @@ namespace renik {
 			if (surface == nullptr)
 				return false;
 			return true;
-		}
-
-		Material* GraphicMgr::CreateMaterial() {
-			Material mat = {};
-			mat.shader = nullptr;
-			mat.pointerHandler = std::unordered_map<std::string, void*>();
-
-			materials.push_back(mat);
-			return &materials[GraphicMgr::materials.size() - 1];
-		}
-		bool GraphicMgr::DestroyMaterial(Material* mat) {
-			if (mat != nullptr)
-			{
-				mat->shader = nullptr;
-				size_t len = materials.size();
-				for (size_t i = 0; i < len; i++)
-				{
-					if (&materials[i] == mat) {
-						materials.erase(materials.begin() + i);
-						materials.shrink_to_fit();
-						return true;
-					}
-				}
-			}
-			return false;
 		}
 
 		//---- MESH ----
@@ -128,7 +102,7 @@ namespace renik {
 				}
 				else {
 					//else, we need to re-alocating new data
-					auto offset = 0U;
+					size_t offset = 0U;
 					for (auto& i : m_vertexPtr) {
 						if (i.second.ptr == arrPtr.ptr) {
 							break;

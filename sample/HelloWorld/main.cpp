@@ -70,18 +70,15 @@ int main() {
 	mesh.add_vertex("vert", &vertData);
 	mesh.add_vertex("color", &colorData);
 	mesh.set_index(&idxData);
+	mesh.material = new Material();
 
-	auto material = GraphicMgr::CreateMaterial();
 	auto shader = gHandle->CreateShader(vertexShader, fragmentShader);
-	gHandle->AttachShader(shader, material);
-
-	gHandle->AttachMaterial(material, &mesh);
+	gHandle->AttachShaderToMaterial(shader, mesh.material);
 
 	win->Show();
 	while (true) {
 		win->Update();
 		gHandle->BeginRender();
-		auto ptr = mesh.get_vertexPtr("color");
 		gHandle->DrawMesh(&mesh, GraphicDrawMode::TRIANGLES);
 		gHandle->EndRender();
 		Sleep(1);

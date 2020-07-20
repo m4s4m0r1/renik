@@ -1,5 +1,6 @@
 #pragma once
 #ifndef RENIK_ENTITY_CPP_H
+#define RENIK_ENTITY_CPP_H
 #include <renik\cpp\common.h>
 namespace renik {
 	namespace EntitySystem {

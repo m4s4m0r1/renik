@@ -243,14 +243,6 @@ namespace renik {
 			int IGraphic_OGL::UnbindTexture(uint handler) {
 				return false;
 			}
-
-			int IGraphic_OGL::AttachMaterial(Material* material, Mesh* mesh) {
-				mesh->material = material;
-				return false;
-			}
-			int IGraphic_OGL::DestroyMaterial(Material* material) { 
-				return false;
-			}
 			
 			Shader* IGraphic_OGL::CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name) { 
 				if (vertexShaderSrc == nullptr || fragmentShaderSrc == nullptr) {
@@ -333,7 +325,7 @@ namespace renik {
 
 				return nullptr;
 			}
-			int IGraphic_OGL::AttachShader(Shader* shader, Material* material){ 
+			int IGraphic_OGL::AttachShaderToMaterial(Shader* shader, Material* material){ 
 				if (shader == nullptr || material == nullptr)
 					return false;
 				for (auto sP : shader->input) {
@@ -342,7 +334,7 @@ namespace renik {
 						loc = (uint)glGetAttribLocation((uint)shader->handle, sP.first.c_str());
 					else
 						loc = (uint)glGetUniformLocation((uint)shader->handle, sP.first.c_str());
-					material->pointerHandler[sP.first] = (void*)loc;
+					material->shaderInputHandler[sP.first] = (void*)loc;
 				}
 				material->shader = shader;
 				return true;
@@ -362,21 +354,21 @@ namespace renik {
 			
 			int IGraphic_OGL::DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) {
 				glUseProgram((uint)mesh->material->shader->handle);
-				__getErr(this->logCallback, "glUseProgram", __LINE__);
+				//__getErr(this->logCallback, "glUseProgram", __LINE__);
 				BindMesh(mesh);
 				size_t offset = 0U;
-				for (auto v : mesh->material->pointerHandler) {
+				for (auto v : mesh->material->shaderInputHandler) {
 					auto meshPtr = mesh->get_vertexPtr(v.first.c_str());
 					glEnableVertexAttribArray((uint)v.second);
-					__getErr(this->logCallback, "glEnableVertexAttribArray", __LINE__);
+					//__getErr(this->logCallback, "glEnableVertexAttribArray", __LINE__);
 					glVertexAttribPointer((uint)v.second, meshPtr.stride, GL_FLOAT, GL_FALSE, 0, (void*)offset);
-					__getErr(this->logCallback, "glVertexAttribPointer", __LINE__);
+					//__getErr(this->logCallback, "glVertexAttribPointer", __LINE__);
 					offset += meshPtr.size;
 				}
 				glDrawElements(__getDrawMode(drawMode), mesh->get_indexLength(), GL_UNSIGNED_INT, (void*)NULL);
-				for (auto m : mesh->material->pointerHandler) {
+				for (auto m : mesh->material->shaderInputHandler) {
 					glDisableVertexAttribArray((uint)m.second);
-					__getErr(this->logCallback, "glDisableVertexAttribArray", __LINE__);
+					//__getErr(this->logCallback, "glDisableVertexAttribArray", __LINE__);
 				}
 				glBindBuffer(GL_ARRAY_BUFFER, NULL);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);
