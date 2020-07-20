@@ -465,30 +465,22 @@ namespace renik {
 	};
 
 	//----DATAPACK----
-	template<typename T> struct Array {
+	template<typename T> struct ArrayPtr {
 	public:
 		T* ptr = nullptr;
-		size_t length = 0U;
+		size_t size = 0U;
+		size_t sizePerElement = sizeof(T);
 		uint stride = 1U;
-		uint sizePerElement = sizeof(T);
 
-		Array(T* ptr = nullptr, size_t length = 0U, uint stride = 1U, uint sizePerElement = sizeof(T)) {
+		ArrayPtr(T* ptr = nullptr, size_t size = 0U, uint stride = 1U, size_t sizePerElement = sizeof(T)) {
 			this->ptr = ptr;
-			this->length = length;
+			this->size = size;
 			this->stride = stride;
 			this->sizePerElement = sizePerElement;
 		}
 
-		size_t size() {
-			return length * sizePerElement;
-		}
-		size_t totalLength() {
-			return length * stride;
-		}
+		size_t length() { return size / sizePerElement; }
 
-		size_t totalLengthInByte() {
-			return sizePerElement * totalLength();
-		}
 	};
 }
 #endif // !RENIK_COMMON_CPP_H

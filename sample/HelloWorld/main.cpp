@@ -13,15 +13,9 @@ float vertices[] = {
 };
 
 float colors[] = {
-	 1.0f, 0.0f, 0.0f, 0.2f, // Vertex 1: Red
+	 1.0f, 0.0f, 0.0f, 1.0f, // Vertex 1: Red
 	 0.0f, 1.0f, 0.0f, 1.0f, // Vertex 2: Green
-	 0.0f, 0.0f, 1.0f, 0.5f,// Vertex 3: Blue
-};
-
-float colors2[] = {
-	 1.0f, 1.0f, 0.0f, 0.5f,// Vertex 1: Red
-	 1.0f, 0.0f, 1.0f, 0.5f, // Vertex 2: Green
-	 1.0f, 1.0f, 1.0f, 0.5f, // Vertex 3: Blue
+	 0.0f, 0.0f, 1.0f, 1.0f,// Vertex 3: Blue
 };
 
 unsigned int indicies[] = {
@@ -30,8 +24,8 @@ unsigned int indicies[] = {
 
 const char* vertexShader = R"glsl(
 	#version 150 core
-	in vec3 vert;
 	in vec4 color;
+	in vec3 vert;
 
 	out vec4 Color;
 	void main() {
@@ -68,35 +62,27 @@ int main() {
 	auto gHandle = GraphicMgr::ConnectSurface(surface, win->get_handle());
 	gHandle->logCallback = DebugGLog;
 
-	Array<float> vertData = { vertices, sizeof(vertices) / sizeof(float), 3U };
-	Array<uint> idxData = { indicies, sizeof(indicies) / sizeof(float) };
-	Array<float> colorData = { colors, sizeof(colors) / sizeof(float), 4U};
-	Array<float> colorData2 = { colors2, sizeof(colors2) / sizeof(float), 4U };
+	ArrayPtr<float> vertData = { vertices, sizeof(vertices), 3U };
+	ArrayPtr<uint> idxData = { indicies, sizeof(indicies) };
+	ArrayPtr<float> colorData = { colors, sizeof(colors), 4U};
 
-	//auto mesh = GraphicMgr::CreateMesh(vertData, idxData);
 	Mesh mesh = Mesh();
 	mesh.add_vertex("vert", &vertData);
 	mesh.add_vertex("color", &colorData);
 	mesh.set_index(&idxData);
-
-	Mesh mesh2 = Mesh();
-	mesh2.add_vertex("vert", &vertData);
-	mesh2.add_vertex("color", &colorData2);
-	mesh2.set_index(&idxData);
 
 	auto material = GraphicMgr::CreateMaterial();
 	auto shader = gHandle->CreateShader(vertexShader, fragmentShader);
 	gHandle->AttachShader(shader, material);
 
 	gHandle->AttachMaterial(material, &mesh);
-	gHandle->AttachMaterial(material, &mesh2);
 
 	win->Show();
 	while (true) {
 		win->Update();
 		gHandle->BeginRender();
+		auto ptr = mesh.get_vertexPtr("color");
 		gHandle->DrawMesh(&mesh, GraphicDrawMode::TRIANGLES);
-		gHandle->DrawMesh(&mesh2, GraphicDrawMode::TRIANGLES);
 		gHandle->EndRender();
 		Sleep(1);
 	}

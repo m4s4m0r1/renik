@@ -219,7 +219,7 @@ namespace renik {
 				size_t offset = 0U;
 				auto ptrs = mesh->get_vertexPtrs();
 				for (auto v : ptrs) {
-					auto size = v.size();
+					auto size = v.size;
 					glBufferSubData(GL_ARRAY_BUFFER, offset, size, v.ptr);
 					__getErr(this->logCallback, "glBufferSubData", __LINE__);
 					offset += size;
@@ -371,7 +371,7 @@ namespace renik {
 					__getErr(this->logCallback, "glEnableVertexAttribArray", __LINE__);
 					glVertexAttribPointer((uint)v.second, meshPtr.stride, GL_FLOAT, GL_FALSE, 0, (void*)offset);
 					__getErr(this->logCallback, "glVertexAttribPointer", __LINE__);
-					offset += meshPtr.size();
+					offset += meshPtr.size;
 				}
 				glDrawElements(__getDrawMode(drawMode), mesh->get_indexLength(), GL_UNSIGNED_INT, (void*)NULL);
 				for (auto m : mesh->material->pointerHandler) {

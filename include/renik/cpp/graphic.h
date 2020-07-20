@@ -270,7 +270,7 @@ namespace renik {
 		private:
 			std::vector<float> m_vertex;
 			std::vector<uint> m_index;
-			std::unordered_map<std::string, Array<float>> m_vertexPtr;
+			std::unordered_map<std::string, ArrayPtr<float>> m_vertexPtr;
 			friend class IGraphic;
 		public:
 			Material* material;
@@ -279,7 +279,7 @@ namespace renik {
 			Mesh() : BaseObject() {
 				m_vertex = std::vector<float>();
 				m_index = std::vector<uint>();
-				m_vertexPtr = std::unordered_map<std::string, Array<float>>();
+				m_vertexPtr = std::unordered_map<std::string, ArrayPtr<float>>();
 
 				material = nullptr;
 				isStatic = false;
@@ -291,18 +291,18 @@ namespace renik {
 			}
 
 			int get_index(const uint* buffer, size_t bufferSize);
-			int set_index(Array<uint>* indexArray);
-			Array<uint> get_indexPtr();
+			int set_index(ArrayPtr<uint>* indexArray);
+			ArrayPtr<uint> get_indexPtr();
 
 			int get_vertex(const char* name, const float* buffer, size_t bufferSize);
-			int add_vertex(const char* name, Array<float>* vertexData);
+			int add_vertex(const char* name, ArrayPtr<float>* vertexData);
 			int remove_vertex(const char* name);
 
 			size_t get_vertexLength();
 			size_t get_indexLength();
-			Array<float> get_vertexPtr(const char* name);
+			ArrayPtr<float> get_vertexPtr(const char* name);
 			std::vector<std::string> get_vertexNames();
-			std::vector<Array<float>> get_vertexPtrs();
+			std::vector<ArrayPtr<float>> get_vertexPtrs();
 		};
 
 		class Texture: public BaseObject<ulong, Shader>{
