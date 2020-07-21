@@ -4,6 +4,7 @@
 
 #if defined(RENIK_STATIC)
 	#include <renik\cpp\common.h>
+	#include <renik\cpp\memory.h>
 	#include <renik\cpp\entity.h>
 	#include <renik\cpp\graphic.h>
 	#include <renik\cpp\thread.h>

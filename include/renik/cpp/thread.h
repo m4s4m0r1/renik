@@ -5,7 +5,7 @@
 
 namespace renik {
 	namespace Thread {
-		struct ThreadData : public BaseObject<uint, ThreadData>{
+		struct ThreadData : public BaseObject<id_t, ThreadData>{
 			uint thread_id;
 		};
 

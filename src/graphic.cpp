@@ -78,7 +78,7 @@ namespace renik {
 			memcpy(&buffer, &m_index[0], bufferSize);
 			return true;
 		}
-		size_t Mesh::get_indexLength() {
+		size_t Mesh::get_indexSize() {
 			return m_index.size();
 		}
 		ArrayPtr<uint> Mesh::get_indexPtr() {
@@ -92,65 +92,12 @@ namespace renik {
 		int  Mesh::add_vertex(const char* name, ArrayPtr<float>* vertexData) {
 			if (name == nullptr || vertexData == nullptr || vertexData->ptr == nullptr)
 				return false;
-			try {
-				//if name is already registered
-				//Modify the data
-				auto arrPtr = m_vertexPtr.at(name);
-				//if the target has a same size, copy it
-				if (arrPtr.size == vertexData->size) {
-					memcpy(arrPtr.ptr, vertexData->ptr, vertexData->length());
-				}
-				else {
-					//else, we need to re-alocating new data
-					size_t offset = 0U;
-					for (auto& i : m_vertexPtr) {
-						if (i.second.ptr == arrPtr.ptr) {
-							break;
-						}
-						offset += i.second.size;
-					}
-					//TODO : Not so eficient but kinda work for now
-					//Erase all data related start from this pointer
-					m_vertex.erase(m_vertex.begin() + offset, m_vertex.begin() + offset + arrPtr.length());
-					//Insert new data start from this pointer
-					m_vertex.insert(m_vertex.begin() + offset, vertexData->ptr, vertexData->ptr + vertexData->length());
-					m_vertex.shrink_to_fit();
-
-					m_vertexPtr[name] = *vertexData;
-
-					//Re-pointing all "Pointer" in vertexPtr
-					offset = 0U;
-					for (auto& i : m_vertexPtr) {
-						i.second.ptr = &m_vertex[offset];
-						offset += i.second.size;
-					}
-				}
-				return true;
-			}
-			catch (std::out_of_range) {
-				//If the name is not registered
-				//Add it to vertex buffer
-				m_vertex.insert(m_vertex.end(), vertexData->ptr, vertexData->ptr + vertexData->length());
-				m_vertex.shrink_to_fit();
-				m_vertexPtr[name] = *vertexData;
-
-				//Re-pointing all "Pointer" in vertexPtr
-				auto offset = 0U;
-				for (auto& i : m_vertexPtr) {
-					i.second.ptr = &m_vertex[offset];
-					offset += i.second.length();
-				}
-				return true;
-			}
-			catch (const std::exception) {
-				//Otherwise something wrong happened
-				return false;
-			}
+			return m_vertex.AddBuffer(name, vertexData);
 		}
 		int Mesh::get_vertex(const char* name, const float* buffer, size_t bufferSize) {
 			if (name == nullptr || buffer == nullptr)
 				return false;
-			try {
+			/*try {
 				auto arr = m_vertexPtr.at(name);
 				if (bufferSize > arr.size)
 					bufferSize = arr.size;
@@ -159,7 +106,8 @@ namespace renik {
 			}
 			catch (std::out_of_range e) {
 				return false;
-			}
+			}*/
+			return true;
 		}
 		int Mesh::remove_vertex(const char* name) {
 			if (name == nullptr)
@@ -171,36 +119,14 @@ namespace renik {
 				return false;
 			}
 		}
-		size_t Mesh::get_vertexLength() {
-			return m_vertex.size();
+		size_t Mesh::get_vertexSize() {
+			return m_vertex.get_size();
 		}
 		ArrayPtr<float> Mesh::get_vertexPtr(const char* name) {
-			try {
-				return m_vertexPtr.at(name);
-			}
-			catch (std::out_of_range) {
-				return nullptr;
-			}
-		}
-		std::vector<std::string> Mesh::get_vertexNames() {
-			size_t len = m_vertexPtr.size();
-			std::vector<std::string> res(len);
-			size_t i = 0U;
-			for (auto m : m_vertexPtr) {
-				res[i] = m.first;
-				i++;
-			}
-			return res;
+			return m_vertex.GetBuffer(name);
 		}
 		std::vector<ArrayPtr<float>> Mesh::get_vertexPtrs() {
-			size_t len = m_vertexPtr.size();
-			std::vector<ArrayPtr<float>> res(len);
-			size_t i = 0U;
-			for (auto m : m_vertexPtr) {
-				res[i] = m.second;
-				i++;
-			}
-			return res;
+			return m_vertex.GetBufferPtrs();
 		}
 	}
 }

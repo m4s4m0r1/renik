@@ -72,6 +72,9 @@
     <ClInclude Include="..\RENIK_NYAMPAH\RENIK_JADUL\3rdParty\include\GLEW\wglew.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\renik\cpp\memory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\common.cpp">

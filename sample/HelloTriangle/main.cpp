@@ -1,3 +1,6 @@
+//Example:
+//Hello Triangle
+
 #pragma comment (lib, "renik.lib")
 #define RENIK_STATIC
 #include <renik\renik.h>
@@ -13,9 +16,9 @@ float vertices[] = {
 };
 
 float colors[] = {
-	 1.0f, 0.0f, 0.0f, 1.0f, // Vertex 1: Red
-	 0.0f, 1.0f, 0.0f, 1.0f, // Vertex 2: Green
-	 0.0f, 0.0f, 1.0f, 1.0f,// Vertex 3: Blue
+	 1.0f, 0.0f, 0.0f, 1.0f,
+	 0.0f, 1.0f, 0.0f, 1.0f,
+	 0.0f, 0.0f, 1.0f, 1.0f,
 };
 
 unsigned int indicies[] = {
@@ -41,42 +44,47 @@ const char* fragmentShader = R"glsl(
 	out vec4 outColor;
 	void main() {
 		outColor = vec4(Color);
-		//outColor = vec4(1.0, 1.0, 1.0, 1.0);
 	}
 )glsl";
 
-void DebugGLog(int code, int graphic, std::string str) {
-	printf("%s \n",str.c_str());
-}
-
 int main() {
+	//Create Window
 	WindowDesc desc = {};
 	desc.rect = RectI(0, 0, 800, 600);
 	desc.title = L"Hello Renik";
 	auto win = WindowMgr::Create(&desc);
 
+	//Create a "Surface" for displaying the Graphic
 	GraphicSurfaceData sData = {};
 	sData.tgtGraphic = GraphicBackend::OPENGL;
-
 	auto surface = GraphicMgr::CreateSurface(&sData);
+
+	//Connect the Surface and Window to get the Graphic Handle
 	auto gHandle = GraphicMgr::ConnectSurface(surface, win->get_handle());
-	gHandle->logCallback = DebugGLog;
 
+	//Create Pointers of Data
 	ArrayPtr<float> vertData = { vertices, sizeof(vertices), 3U };
+	ArrayPtr<float> colorData = { colors, sizeof(colors), 4U };
 	ArrayPtr<uint> idxData = { indicies, sizeof(indicies) };
-	ArrayPtr<float> colorData = { colors, sizeof(colors), 4U};
 
+	//Create Mesh and register the data
 	Mesh mesh = Mesh();
 	mesh.add_vertex("vert", &vertData);
 	mesh.add_vertex("color", &colorData);
 	mesh.set_index(&idxData);
+
+	//Create a Material
 	mesh.material = new Material();
 
+	//Create a Shader
 	auto shader = gHandle->CreateShader(vertexShader, fragmentShader);
+	//Attach shader to Material to connect the Shader Input
 	gHandle->AttachShaderToMaterial(shader, mesh.material);
 
+	//Show The Window
 	win->Show();
 	while (true) {
+		//Update and Draw
 		win->Update();
 		gHandle->BeginRender();
 		gHandle->DrawMesh(&mesh, GraphicDrawMode::TRIANGLES);

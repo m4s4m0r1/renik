@@ -466,7 +466,6 @@ namespace renik {
 
 	//----DATAPACK----
 	template<typename T> struct ArrayPtr {
-	public:
 		T* ptr = nullptr;
 		size_t size = 0U;
 		size_t sizePerElement = sizeof(T);

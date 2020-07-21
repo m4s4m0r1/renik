@@ -28,6 +28,7 @@
     <ClInclude Include="include\renik\cpp\graphic.h" />
     <ClInclude Include="include\renik\cpp\headers.h" />
     <ClInclude Include="include\renik\cpp\math.h" />
+    <ClInclude Include="include\renik\cpp\memory.h" />
     <ClInclude Include="include\renik\cpp\thread.h" />
     <ClInclude Include="include\renik\cpp\window.h" />
     <ClInclude Include="include\renik\renik.h" />

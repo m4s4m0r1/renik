@@ -3,6 +3,10 @@
 #define RENIK_GRAPHIC_CPP_H
 #include <renik\cpp\common.h>
 
+#ifndef RENIK_MEMORY_CPP_H
+#include <renik\cpp\memory.h>
+#endif
+
 #define RENIK_IGRAPHIC(className) \
 	class className : public IGraphic {\
 	protected:\
@@ -15,22 +19,22 @@
 		bool get_IsInitialized() override;\
 		Surface* get_Surface() override;\
 		std::vector<Shader> get_Shaders() override;\
-		Shader* get_Shader(uint shaderID) override;\
+		Shader* get_Shader(id_t shaderID) override;\
 		int Init() override;\
 		int Release() override;\
 		bool CheckFeature(int feature) override;\
 		int EnableFeature(int feature) override;\
 		int DisableFeature(int feature) override;\
-		uint CreateFrameBuffer() override;\
-		int DeleteFrameBuffer(uint handler) override;\
-		int BindFrameBuffer(uint handler) override;\
-		uint CreateRenderBuffer() override;\
-		int DeleteRenderBuffer(uint handler) override;\
-		int BindRenderBuffer(uint handler) override;\
+		id_t CreateFrameBuffer() override;\
+		int DeleteFrameBuffer(id_t handler) override;\
+		int BindFrameBuffer(id_t handler) override;\
+		id_t CreateRenderBuffer() override;\
+		int DeleteRenderBuffer(id_t handler) override;\
+		int BindRenderBuffer(id_t handler) override;\
 		int BindMesh(Mesh* mesh,bool rebind = false) override;\
 		int UnbindMesh(Mesh* mesh,bool release = false) override;\
-		uint BindTexture(Texture* texture) override;\
-		int UnbindTexture(uint handler) override;\
+		id_t BindTexture(Texture* texture) override;\
+		int UnbindTexture(id_t handler) override;\
 		Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) override;\
 		int AttachShaderToMaterial(Shader* shader, Material* material)override;\
 		int DestroyShader(Shader* shader)override;\
@@ -55,6 +59,7 @@ namespace renik {
 				void* ibo;
 			};
 		}
+		
 		class IGraphic;
 		typedef RENFUNC(gLogCallback, void, int, int, std::string);
 
@@ -251,14 +256,14 @@ namespace renik {
 			}
 		};
 
-		class Shader : public BaseObject<ulong, Shader> {
+		class Shader : public BaseObject<id_t, Shader> {
 		public:
 			const char* name = nullptr;
 			void* handle = nullptr;
 			std::unordered_map<std::string, GraphicShaderInputInfo> input;
 		};
 
-		class Material : public BaseObject<ulong, Material> {
+		class Material : public BaseObject<id_t, Material> {
 		public:
 			Shader* shader;
 			std::unordered_map<std::string, void*> shaderInputHandler;
@@ -273,28 +278,22 @@ namespace renik {
 			}
 		};
 
-		class Mesh : public BaseObject<ulong, Mesh> {
+		class Mesh : public BaseObject<id_t, Mesh> {
 		private:
-			std::vector<float> m_vertex;
+			renik::Memory::MapBuffer<float> m_vertex;
 			std::vector<uint> m_index;
-			std::unordered_map<std::string, ArrayPtr<float>> m_vertexPtr;
-			friend class IGraphic;
 		public:
 			Material* material;
 			bool isStatic = false;
 
 			Mesh() : BaseObject() {
-				m_vertex = std::vector<float>();
 				m_index = std::vector<uint>();
-				m_vertexPtr = std::unordered_map<std::string, ArrayPtr<float>>();
 
 				material = nullptr;
 				isStatic = false;
 			}
 			~Mesh() {
-				m_vertex.clear();
 				m_index.clear();
-				m_vertexPtr.clear();
 			}
 
 			int get_index(const uint* buffer, size_t bufferSize);
@@ -305,14 +304,13 @@ namespace renik {
 			int add_vertex(const char* name, ArrayPtr<float>* vertexData);
 			int remove_vertex(const char* name);
 
-			size_t get_vertexLength();
-			size_t get_indexLength();
+			size_t get_vertexSize();
+			size_t get_indexSize();
 			ArrayPtr<float> get_vertexPtr(const char* name);
-			std::vector<std::string> get_vertexNames();
 			std::vector<ArrayPtr<float>> get_vertexPtrs();
 		};
 
-		class Texture: public BaseObject<ulong, Shader>{
+		class Texture: public BaseObject<id_t, Shader>{
 		public:
 			SizeI size = SizeI();
 			GraphicPixelFormat pixFmt;
@@ -341,7 +339,7 @@ namespace renik {
 			virtual bool get_IsInitialized() { return _initialized; }
 			virtual Surface* get_Surface() { return _surface; }
 			virtual std::vector<Shader> get_Shaders() { return _libShader; }
-			virtual Shader* get_Shader(uint shaderID) {
+			virtual Shader* get_Shader(id_t shaderID) {
 				auto len = _libShader.size();
 				for (size_t i = 0; i < len; i++)
 				{
@@ -359,19 +357,19 @@ namespace renik {
 			virtual int EnableFeature(int feature) { return false; }
 			virtual int DisableFeature(int feature) { return false; }
 			//Frame Array
-			virtual uint CreateFrameBuffer() { return 0U; }
-			virtual int DeleteFrameBuffer(uint handler) { return false; }
-			virtual int BindFrameBuffer(uint handler) { return false; }
+			virtual id_t CreateFrameBuffer() { return 0U; }
+			virtual int DeleteFrameBuffer(id_t handler) { return false; }
+			virtual int BindFrameBuffer(id_t handler) { return false; }
 			//Render Array
-			virtual uint CreateRenderBuffer() { return 0U; }
-			virtual int DeleteRenderBuffer(uint handler) { return false; }
-			virtual int BindRenderBuffer(uint handler) { return false; }
+			virtual id_t CreateRenderBuffer() { return 0U; }
+			virtual int DeleteRenderBuffer(id_t handler) { return false; }
+			virtual int BindRenderBuffer(id_t handler) { return false; }
 			//Mesh Creation
 			virtual int BindMesh(Mesh* mesh, bool rebind = false) { return false; }
 			virtual int UnbindMesh(Mesh* mesh, bool release = false) { return false; }
 			//Texture
-			virtual uint BindTexture(Texture* texture) { return 0U; }
-			virtual int UnbindTexture(uint handler) { return false; }
+			virtual id_t BindTexture(Texture* texture) { return 0U; }
+			virtual int UnbindTexture(id_t handler) { return false; }
 			//Shader
 			virtual Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) { return false; }
 			virtual int AttachShaderToMaterial(Shader* shader, Material* material) { return false; }

@@ -34,7 +34,7 @@ namespace renik {
 		};
 
 		//----WINDOW ABSTRACTION----
-		class IWindow : public BaseObject<uint, IWindow> {
+		class IWindow : public BaseObject<id_t, IWindow> {
 		protected:
 			WindowDesc _desc;
 			WinHandle _handle;

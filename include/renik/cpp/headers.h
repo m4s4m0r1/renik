@@ -99,6 +99,8 @@ namespace renik {
 #define ullong unsigned long long
 #define llong long long
 
+typedef size_t id_t;
+
 #define SAFE_DELETE(var) if(var != NULL) delete var
 #define SAFE_DELETE_ARR(var) if(var != NULL) delete[] var;
 }

@@ -30,9 +30,9 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{5B3FE2FB-5CB3-4418-8A00-ACD5569F2AE9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>HelloWorld</RootNamespace>
+    <RootNamespace>HelloTriangle</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
-    <ProjectName>HelloRenik</ProjectName>
+    <ProjectName>HelloTriangle</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

@@ -90,7 +90,7 @@ namespace renik {
 			bool IGraphic_OGL::get_IsInitialized() { return IGraphic::get_IsInitialized(); }
 			Surface* IGraphic_OGL::get_Surface() { return IGraphic::get_Surface(); }
 			std::vector<Shader> IGraphic_OGL::get_Shaders() { return IGraphic::get_Shaders(); }
-			Shader* IGraphic_OGL::get_Shader(uint shaderID) { return IGraphic::get_Shader(shaderID); }
+			Shader* IGraphic_OGL::get_Shader(id_t shaderID) { return IGraphic::get_Shader(shaderID); }
 
 			int IGraphic_OGL::Init() {
 				_initialized = false;
@@ -171,23 +171,23 @@ namespace renik {
 				return true;
 			}
 			
-			uint IGraphic_OGL::CreateFrameBuffer() {
+			id_t IGraphic_OGL::CreateFrameBuffer() {
 				return 0U;
 			}
-			int IGraphic_OGL::DeleteFrameBuffer(uint handler) { 
+			int IGraphic_OGL::DeleteFrameBuffer(id_t handler) {
 				return 0;
 			}
-			int IGraphic_OGL::BindFrameBuffer(uint handler) {
+			int IGraphic_OGL::BindFrameBuffer(id_t handler) {
 				return 0;
 			}
 			
-			uint IGraphic_OGL::CreateRenderBuffer() { 
+			id_t IGraphic_OGL::CreateRenderBuffer() {
 				return 0U;
 			}
-			int IGraphic_OGL::DeleteRenderBuffer(uint handler) {
+			int IGraphic_OGL::DeleteRenderBuffer(id_t handler) {
 				return 0;
 			}
-			int IGraphic_OGL::BindRenderBuffer(uint handler) { 
+			int IGraphic_OGL::BindRenderBuffer(id_t handler) {
 				return 0;
 			}
 			
@@ -213,7 +213,7 @@ namespace renik {
 				uint hPtr[2];
 				glGenBuffers(2, hPtr);
 				glBindBuffer(GL_ARRAY_BUFFER, hPtr[0]);
-				size_t vLen = mesh->get_vertexLength() * sizeof(float);
+				size_t vLen = mesh->get_vertexSize();
 				glBufferData(GL_ARRAY_BUFFER, vLen, NULL, mesh->isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 				__getErr(this->logCallback, "glBufferData", __LINE__);
 				size_t offset = 0U;
@@ -225,10 +225,12 @@ namespace renik {
 					offset += size;
 				}
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, hPtr[1]);
-				size_t iLen = mesh->get_indexLength() * sizeof(float);
+
+				size_t iLen = mesh->get_indexSize() * sizeof(float);
 				auto iPtr = mesh->get_indexPtr();
 				glBufferData(GL_ELEMENT_ARRAY_BUFFER, iLen, iPtr.ptr, mesh->isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 				__getErr(this->logCallback, "glBufferSubData", __LINE__);
+
 				_MeshHandler handler = { (void*)hPtr[0], (void*)hPtr[1] };
 				_meshHandler[mesh] = handler;
 				return true;
@@ -237,10 +239,10 @@ namespace renik {
 				return false;
 			}
 			
-			uint IGraphic_OGL::BindTexture(Texture* tex) {
+			id_t IGraphic_OGL::BindTexture(Texture* tex) {
 				return false;
 			}
-			int IGraphic_OGL::UnbindTexture(uint handler) {
+			int IGraphic_OGL::UnbindTexture(id_t handler) {
 				return false;
 			}
 			
@@ -354,21 +356,21 @@ namespace renik {
 			
 			int IGraphic_OGL::DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) {
 				glUseProgram((uint)mesh->material->shader->handle);
-				//__getErr(this->logCallback, "glUseProgram", __LINE__);
+				__getErr(this->logCallback, "glUseProgram", __LINE__);
 				BindMesh(mesh);
 				size_t offset = 0U;
 				for (auto v : mesh->material->shaderInputHandler) {
 					auto meshPtr = mesh->get_vertexPtr(v.first.c_str());
 					glEnableVertexAttribArray((uint)v.second);
-					//__getErr(this->logCallback, "glEnableVertexAttribArray", __LINE__);
+					__getErr(this->logCallback, "glEnableVertexAttribArray", __LINE__);
 					glVertexAttribPointer((uint)v.second, meshPtr.stride, GL_FLOAT, GL_FALSE, 0, (void*)offset);
-					//__getErr(this->logCallback, "glVertexAttribPointer", __LINE__);
+					__getErr(this->logCallback, "glVertexAttribPointer", __LINE__);
 					offset += meshPtr.size;
 				}
-				glDrawElements(__getDrawMode(drawMode), mesh->get_indexLength(), GL_UNSIGNED_INT, (void*)NULL);
+				glDrawElements(__getDrawMode(drawMode), mesh->get_indexSize(), GL_UNSIGNED_INT, (void*)NULL);
 				for (auto m : mesh->material->shaderInputHandler) {
 					glDisableVertexAttribArray((uint)m.second);
-					//__getErr(this->logCallback, "glDisableVertexAttribArray", __LINE__);
+					__getErr(this->logCallback, "glDisableVertexAttribArray", __LINE__);
 				}
 				glBindBuffer(GL_ARRAY_BUFFER, NULL);
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, NULL);

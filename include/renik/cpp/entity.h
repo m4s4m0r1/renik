@@ -6,7 +6,7 @@ namespace renik {
 	namespace EntitySystem {
 		typedef RENFUNC(entityFunc, void);
 		//--- BASE ENTITY OBJECT ---
-		template<class T> class Object : public BaseObject<uint, T> {
+		template<class T> class Object : public BaseObject<id_t, T> {
 		private:
 			static std::vector<Object<T>> m_objPool;
 		protected:
