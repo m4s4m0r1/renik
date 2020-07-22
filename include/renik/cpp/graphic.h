@@ -23,8 +23,8 @@
 		int Init() override;\
 		int Release() override;\
 		bool CheckFeature(int feature) override;\
-		int EnableFeature(int feature) override;\
-		int DisableFeature(int feature) override;\
+		int EnableFeature(int feature, void(*fAction)(void*)) override;\
+		int DisableFeature(int feature, void(*fAction)(void*)) override;\
 		id_t CreateFrameBuffer() override;\
 		int DeleteFrameBuffer(id_t handler) override;\
 		int BindFrameBuffer(id_t handler) override;\
@@ -38,12 +38,10 @@
 		Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) override;\
 		int AttachShaderToMaterial(Shader* shader, Material* material)override;\
 		int DestroyShader(Shader* shader)override;\
-		int ApplyTransform(const Vec3F& pos, const Vec3F& rot, const Vec3F& scl) override;\
-		int ApplyProjection(const SizeF& size, float nearClip, float farClip) override;\
 		int DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) override;\
-		int DrawViewPort() override;\
-		int DrawPoint(int drawMode) override;\
-		int DrawLine(int drawMode) override;\
+		int DrawVertices(Memory::MappedBuffer<float>* vertices, GraphicDrawMode drawMode) override;\
+		int DrawViewPort(RectI rect) override;\
+		int DrawScissor(RectI rect) override;\
 		int ClearColor(const Color& color) override;\
 		int ClearDepth(const float& depth) override;\
 		int ClearStencil(const int& stencil) override;\
@@ -280,7 +278,7 @@ namespace renik {
 
 		class Mesh : public BaseObject<id_t, Mesh> {
 		private:
-			renik::Memory::MapBuffer<float> m_vertex;
+			renik::Memory::MappedBuffer<float> m_vertex;
 			std::vector<uint> m_index;
 		public:
 			Material* material;
@@ -354,8 +352,8 @@ namespace renik {
 			virtual int Release() { return false; }
 			//Backend Feature
 			virtual bool CheckFeature(int feature) { return false; }
-			virtual int EnableFeature(int feature) { return false; }
-			virtual int DisableFeature(int feature) { return false; }
+			virtual int EnableFeature(int feature, void(*fAction)(void*)) { return false; }
+			virtual int DisableFeature(int feature, void(*fAction)(void*)) { return false; }
 			//Frame Array
 			virtual id_t CreateFrameBuffer() { return 0U; }
 			virtual int DeleteFrameBuffer(id_t handler) { return false; }
@@ -374,14 +372,11 @@ namespace renik {
 			virtual Shader* CreateShader(const char* vertexShaderSrc, const char* fragmentShaderSrc, const char* name = nullptr) { return false; }
 			virtual int AttachShaderToMaterial(Shader* shader, Material* material) { return false; }
 			virtual int DestroyShader(Shader* shader) { return false; }
-			//Transform
-			virtual int ApplyTransform(const Vec3F& pos, const Vec3F& rot, const Vec3F& scl) { return false; }
-			virtual int ApplyProjection(const SizeF& size, float nearClip, float farClip) { return false; }
 			//Render
 			virtual int DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) { return false; }
-			virtual int DrawViewPort() { return false; }
-			virtual int DrawPoint(int drawMode) { return false; }
-			virtual int DrawLine(int drawMode) { return false; }
+			virtual int DrawVertices(Memory::MappedBuffer<float>* vertices, GraphicDrawMode mode) { return false; }
+			virtual int DrawViewPort(RectI rect) { return false; }
+			virtual int DrawScissor(RectI rect) { return false; }
 			virtual int ClearColor(const Color& color) { return false; };
 			virtual int ClearDepth(const float& depth) { return false; };
 			virtual int ClearStencil(const int& stencil) { return false; };

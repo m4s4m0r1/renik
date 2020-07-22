@@ -89,7 +89,7 @@ namespace renik {
 			return res;
 		}
 
-		int  Mesh::add_vertex(const char* name, ArrayPtr<float>* vertexData) {
+		int Mesh::add_vertex(const char* name, ArrayPtr<float>* vertexData) {
 			if (name == nullptr || vertexData == nullptr || vertexData->ptr == nullptr)
 				return false;
 			return m_vertex.AddBuffer(name, vertexData);
@@ -97,27 +97,18 @@ namespace renik {
 		int Mesh::get_vertex(const char* name, const float* buffer, size_t bufferSize) {
 			if (name == nullptr || buffer == nullptr)
 				return false;
-			/*try {
-				auto arr = m_vertexPtr.at(name);
-				if (bufferSize > arr.size)
-					bufferSize = arr.size;
-				memcpy(&buffer, arr.ptr, bufferSize);
-				return true;
-			}
-			catch (std::out_of_range e) {
+			auto data = m_vertex.GetBuffer(name);
+			if (data.ptr == nullptr)
 				return false;
-			}*/
+			if (bufferSize > data.size)
+				bufferSize = data.size;
+			memcpy(&buffer, data.ptr, bufferSize);
 			return true;
 		}
 		int Mesh::remove_vertex(const char* name) {
 			if (name == nullptr)
 				return false;
-			try {
-				return true;
-			}
-			catch (const std::exception) {
-				return false;
-			}
+			return m_vertex.RemoveBuffer(name);
 		}
 		size_t Mesh::get_vertexSize() {
 			return m_vertex.get_size();

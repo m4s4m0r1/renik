@@ -12,7 +12,6 @@ namespace renik {
 			bool IGraphic_OGL::checkShaderCompilation(void* handler,uint kind) {
 				int res;
 				int InfoLogLength;
-
 				glGetShaderiv((uint)handler, GL_COMPILE_STATUS, &res);
 				glGetShaderiv((uint)handler, GL_INFO_LOG_LENGTH, &InfoLogLength);
 				if (InfoLogLength > 0) {
@@ -162,12 +161,16 @@ namespace renik {
 			bool IGraphic_OGL::CheckFeature(int feature) { 
 				return glIsEnabled((GLenum)feature);
 			}
-			int IGraphic_OGL::EnableFeature(int feature) {
+			int IGraphic_OGL::EnableFeature(int feature, void(*fAction)(void*)) {
 				glEnable((GLenum)feature);
+				if (fAction != nullptr)
+					fAction(this->_gctx);
 				return true;
 			}
-			int IGraphic_OGL::DisableFeature(int feature) { 
+			int IGraphic_OGL::DisableFeature(int feature, void(*fAction)(void*)) {
 				glDisable((GLenum)feature);
+				if (fAction != nullptr)
+					fAction(this->_gctx);
 				return true;
 			}
 			
@@ -346,14 +349,7 @@ namespace renik {
 					return false;
 				return false;
 			}
-			
-			int IGraphic_OGL::ApplyTransform(const Vec3F& pos, const Vec3F& rot, const Vec3F& scl) {
-				return false;
-			} 
-			int IGraphic_OGL::ApplyProjection(const SizeF& size, float nearClip, float farClip) {
-				return false;
-			} 
-			
+		
 			int IGraphic_OGL::DrawMesh(Mesh* mesh, GraphicDrawMode drawMode) {
 				glUseProgram((uint)mesh->material->shader->handle);
 				__getErr(this->logCallback, "glUseProgram", __LINE__);
@@ -377,15 +373,19 @@ namespace renik {
 				glUseProgram(0);
 				return false;
 			} 
-			int IGraphic_OGL::DrawViewPort() { 
+			int IGraphic_OGL::DrawVertices(Memory::MappedBuffer<float>* vertices, GraphicDrawMode mode) {
 				return false;
-			} 
-			int IGraphic_OGL::DrawPoint(int drawMode) {
+			}
+			int IGraphic_OGL::DrawViewPort(RectI rect) {
+				//OpenGL always start from bottom-left screen, so we need to flip that
+				glViewport(rect.x, rect.height - rect.y, rect.width, rect.height);
+				return true;
+			}
+			int IGraphic_OGL::DrawScissor(RectI rect) {
+				//OpenGL always start from bottom-left screen, so we need to flip that
+				glScissor(rect.x, rect.height - rect.y, rect.width, rect.height);
 				return false;
-			} 
-			int IGraphic_OGL::DrawLine(int drawMode) {
-				return false;
-			} 
+			}
 			
 			int IGraphic_OGL::ClearColor(const Color& color) {
 				glClearColor(color.r, color.g, color.b, color.a);

@@ -13,16 +13,16 @@ namespace renik {
 			};
 		}
 		
-		template<typename T> class MapBuffer : public BaseObject<id_t, MapBuffer<T>> {
+		template<typename T> class MappedBuffer : public BaseObject<id_t, MappedBuffer<T>> {
 		private:
 			std::vector<T> m_mem;
 			std::vector<__internal__::_MapPtr<T>> m_ptrs;
 		public:
-			MapBuffer() : BaseObject<id_t,MapBuffer<T>>() {
+			MappedBuffer() : BaseObject<id_t,MappedBuffer<T>>() {
 				m_mem = std::vector<T>();
 				m_ptrs = std::vector<__internal__::_MapPtr<T>>();
 			}
-			~MapBuffer() {
+			~MappedBuffer() {
 				m_ptrs.clear();
 				m_mem.clear();
 			}
@@ -84,6 +84,35 @@ namespace renik {
 				return true;
 			}
 			int RemoveBuffer(std::string name) {
+				auto len = m_ptrs.size();
+				for (size_t i = 0; i < len; i++) {
+					auto& mem = m_ptrs[i];
+					if (mem.name == name) {
+						auto dataLength = mem.data.length();
+
+						//Erase/Dealocate Data
+						m_mem.erase(m_mem.begin() + mem.offset, m_mem.begin() + mem.offset + dataLength);
+						m_mem.shrink_to_fit();
+						
+						//Subtract the offset after this pointer
+						for (size_t j = i+1; j < len; j++) {
+							m_ptrs[j].offset -= dataLength;
+						}
+
+						//Erase/Dealocate Pointer
+						m_ptrs.erase(m_ptrs.begin() + i);
+						m_ptrs.shrink_to_fit();
+
+						//Re-Map our ptr
+						size_t offset = 0U;
+						for (auto& p : m_ptrs) {
+							p.data.ptr = &m_mem[offset];
+							p.offset = offset;
+							offset += p.data.length();
+						}
+						return true;
+					}
+				}
 				return false;
 			}
 			ArrayPtr<T> GetBuffer(std::string name) {
