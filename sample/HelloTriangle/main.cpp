@@ -71,7 +71,6 @@ int main() {
 	Mesh mesh = Mesh();
 	mesh.add_vertex("vert", &vertData);
 	mesh.add_vertex("color", &colorData);
-	mesh.remove_vertex("vert");
 	mesh.set_index(&idxData);
 
 	//Create a Material
